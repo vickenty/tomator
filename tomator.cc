@@ -28,12 +28,9 @@ private:
 
 PrefsWindow::PrefsWindow()
 	: m_b_close("Close")
-	, m_l_work("Worktime", Gtk::ALIGN_START)
-	, m_l_rest("Resttime", Gtk::ALIGN_START)
-	, m_l_snooze("Snoozetime", Gtk::ALIGN_START)
-	, m_s_work()
-	, m_s_rest()
-	, m_s_snooze()
+	, m_l_work("Work time", Gtk::ALIGN_START)
+	, m_l_rest("Rest time", Gtk::ALIGN_START)
+	, m_l_snooze("Snooze time", Gtk::ALIGN_START)
 {
 	set_border_width(10);
 	set_resizable(false);
@@ -75,8 +72,9 @@ PrefsWindow::PrefsWindow()
 	m_bbox.pack_start(m_b_close);
 
 	add(m_vbox);
+	m_vbox.show_all_children();
+	m_vbox.show();
 
-	show_all();
 }
 
 PrefsWindow::~PrefsWindow()
@@ -85,30 +83,138 @@ PrefsWindow::~PrefsWindow()
 
 void PrefsWindow::on_close_clicked()
 {
-	std::cout << m_s_work.get_value() << std::endl;
-	std::cout << m_s_rest.get_value() << std::endl;
-	std::cout << m_s_snooze.get_value() << std::endl;
 	hide();
 }
 
 void PrefsWindow::on_work_time_changed()
 {
-	std::cout << "set work time: " << m_s_work.get_value() << std::endl;
 }
 
 void PrefsWindow::on_rest_time_changed()
 {
-	std::cout << "set rest time: " << m_s_rest.get_value() << std::endl;
 }
 
 void PrefsWindow::on_snooze_time_changed()
 {
-	std::cout << "set snooze time: " << m_s_snooze.get_value() << std::endl;
+}
+
+class Tomator : public Glib::ObjectBase
+{
+public:
+
+	void set_work_time(int);
+	int get_work_time();
+
+	void set_rest_time(int);
+	int get_rest_time();
+
+	void set_snooze_time(int);
+	int get_snooze_time();
+
+	void start();
+	void snooze();
+
+	void schedule();
+	bool on_timeout();
+	void on_startup();
+	void on_icon_activation();
+
+	int run(int, char**);
+
+	static Glib::RefPtr<Tomator> create(Glib::RefPtr<Gtk::Application>);
+private:
+	Tomator(Glib::RefPtr<Gtk::Application>);
+
+	int m_work_time;
+	int m_rest_time;
+	int m_snooze_time;
+
+	sigc::connection m_timer;
+	Glib::RefPtr<Gtk::Application> m_app;
+	Glib::RefPtr<Gtk::StatusIcon> m_icon;
+	PrefsWindow *m_prefswin;
+
+	enum mode_t { WORK, REST };
+	mode_t m_mode;
+};
+
+Tomator::Tomator(Glib::RefPtr<Gtk::Application> app)
+	: m_app(app)
+{
+}
+
+Glib::RefPtr<Tomator> Tomator::create(Glib::RefPtr<Gtk::Application> app)
+{
+	return Glib::RefPtr<Tomator>(new Tomator(app));
+}
+
+int Tomator::run(int argc, char** argv)
+{
+	m_app->hold();
+	m_app->signal_startup().connect(sigc::mem_fun(*this, &Tomator::on_startup));
+	return m_app->run(argc, argv);
+}
+
+void Tomator::set_work_time(int time)
+{
+	m_work_time = time;
+}
+
+int Tomator::get_work_time()
+{
+	return m_work_time;
+}
+
+void Tomator::set_rest_time(int time)
+{
+	m_rest_time = time;
+}
+
+int Tomator::get_rest_time()
+{
+	return m_rest_time;
+}
+
+void Tomator::set_snooze_time(int time)
+{
+	m_snooze_time = time;
+}
+
+int Tomator::get_snooze_time()
+{
+	return m_snooze_time;
+}
+
+void Tomator::schedule()
+{
+	m_timer = Glib::signal_timeout().connect(sigc::mem_fun(*this, &Tomator::on_timeout), 1000);
+}
+
+bool Tomator::on_timeout()
+{
+	std::cout << "YAY" << std::endl;
+	return false;
+}
+
+void Tomator::on_startup()
+{
+	m_icon = Gtk::StatusIcon::create(Gtk::Stock::FILE);
+	m_icon->set_has_tooltip();
+	m_icon->set_tooltip_text("Tomator");
+	m_icon->signal_activate().connect(sigc::mem_fun(*this, &Tomator::on_icon_activation));
+
+	m_prefswin = new PrefsWindow();
+	m_app->add_window(*m_prefswin);
+}
+
+void Tomator::on_icon_activation()
+{
+	m_prefswin->show();
 }
 
 int main(int argc, char **argv)
 {
-	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.tomator.base");
-	PrefsWindow win;
-	return app->run(win);
+	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("org.tomator.core");
+	Glib::RefPtr<Tomator> core = Tomator::create(app);
+	return core->run(argc, argv);
 }
