@@ -118,10 +118,15 @@ public:
 	bool on_timeout();
 	void on_startup();
 	void on_icon_activation();
+	void on_icon_menu_popup(guint, guint32);
+	void on_menu_exit();
 
 	int run(int, char**);
 
 	static Glib::RefPtr<Tomator> create(Glib::RefPtr<Gtk::Application>);
+
+	static Glib::ustring s_menu_xml;
+
 private:
 	Tomator(Glib::RefPtr<Gtk::Application>);
 
@@ -132,11 +137,23 @@ private:
 	sigc::connection m_timer;
 	Glib::RefPtr<Gtk::Application> m_app;
 	Glib::RefPtr<Gtk::StatusIcon> m_icon;
+
+	Glib::RefPtr<Gtk::UIManager> m_ui_manager;
+	Glib::RefPtr<Gtk::ActionGroup> m_action_group;
+
 	PrefsWindow *m_prefswin;
+	Gtk::Menu *m_menu;
 
 	enum mode_t { WORK, REST };
 	mode_t m_mode;
 };
+
+Glib::ustring Tomator::s_menu_xml =
+		"<ui>"
+		"	<popup name='icon_menu'>"
+		"		<menuitem action='exit'/>"
+		"	</popup>"
+		"</ui>";
 
 Tomator::Tomator(Glib::RefPtr<Gtk::Application> app)
 	: m_app(app)
@@ -202,14 +219,35 @@ void Tomator::on_startup()
 	m_icon->set_has_tooltip();
 	m_icon->set_tooltip_text("Tomator");
 	m_icon->signal_activate().connect(sigc::mem_fun(*this, &Tomator::on_icon_activation));
+	m_icon->signal_popup_menu().connect(sigc::mem_fun(*this, &Tomator::on_icon_menu_popup));
 
 	m_prefswin = new PrefsWindow();
 	m_app->add_window(*m_prefswin);
+
+	m_action_group = Gtk::ActionGroup::create();
+	m_action_group->add(
+		Gtk::Action::create("exit", "Exit"),
+		sigc::mem_fun(*this, &Tomator::on_menu_exit));
+
+	m_ui_manager = Gtk::UIManager::create();
+	m_ui_manager->insert_action_group(m_action_group);
+	m_ui_manager->add_ui_from_string(Tomator::s_menu_xml);
+	m_menu = dynamic_cast<Gtk::Menu*>(m_ui_manager->get_widget("/icon_menu"));
 }
 
 void Tomator::on_icon_activation()
 {
 	m_prefswin->show();
+}
+
+void Tomator::on_icon_menu_popup(guint button, guint32 activate_time)
+{
+	m_menu->popup(button, activate_time);
+}
+
+void Tomator::on_menu_exit()
+{
+	m_app->quit();
 }
 
 int main(int argc, char **argv)
