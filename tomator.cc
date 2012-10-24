@@ -137,8 +137,6 @@ StatusWindow::StatusWindow()
 	set_resizable(false);
 	set_type_hint(Gdk::WINDOW_TYPE_HINT_DIALOG);
 
-	set_size_request(300, -1);
-
 	Pango::FontDescription fd("Monospace 32");
 	m_l_timer.override_font(fd);
 
@@ -147,16 +145,18 @@ StatusWindow::StatusWindow()
 	m_b_prefs.signal_clicked().connect(sigc::mem_fun(*this, &StatusWindow::on_prefs_clicked));
 
 	m_bbox_act.set_layout(Gtk::BUTTONBOX_SPREAD);
+	m_bbox_act.set_spacing(25);
 	m_bbox_act.pack_start(m_b_pause);
 	m_bbox_act.pack_start(m_b_next);
 
 	m_bbox_util.set_layout(Gtk::BUTTONBOX_SPREAD);
+	m_bbox_util.set_spacing(25);
 	m_bbox_util.pack_start(m_b_prefs);
 	m_bbox_util.pack_start(m_b_close);
 
-	m_vbox.pack_start(m_l_timer, false, false, 10);
+	m_vbox.pack_start(m_l_timer, false, false, 25);
 	m_vbox.pack_start(m_bbox_act, false, false, 10);
-	m_vbox.pack_start(m_bbox_util, false, false, 10);
+	m_vbox.pack_start(m_bbox_util, false, false, 0);
 
 	add(m_vbox);
 	m_vbox.show_all_children();
