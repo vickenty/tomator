@@ -98,6 +98,78 @@ void PrefsWindow::on_snooze_time_changed()
 {
 }
 
+class StatusWindow : public Gtk::Window
+{
+public:
+	StatusWindow();
+	virtual ~StatusWindow();
+
+	void on_close_clicked();
+	void on_next_clicked();
+	void on_prefs_clicked();
+
+	sigc::signal<void> signal_next() { return m_signal_next; }
+	sigc::signal<void> signal_prefs() { return m_signal_prefs; }
+
+private:
+	Gtk::Label m_l_timer;
+	Gtk::Button m_b_prefs;
+	Gtk::Button m_b_close;
+	Gtk::Button m_b_next;
+	Gtk::ButtonBox m_bbox;
+	Gtk::VBox m_vbox;
+
+	sigc::signal<void> m_signal_next;
+	sigc::signal<void> m_signal_prefs;
+
+};
+
+StatusWindow::StatusWindow()
+	: m_l_timer("PAUSE")
+	, m_b_close("Close")
+	, m_b_prefs("Preferences")
+	, m_b_next("Next")
+{
+	set_border_width(10);
+	set_resizable(false);
+	set_type_hint(Gdk::WINDOW_TYPE_HINT_DIALOG);
+
+	m_b_close.signal_clicked().connect(sigc::mem_fun(*this, &StatusWindow::on_close_clicked));
+	m_b_next.signal_clicked().connect(sigc::mem_fun(*this, &StatusWindow::on_next_clicked));
+	m_b_prefs.signal_clicked().connect(sigc::mem_fun(*this, &StatusWindow::on_prefs_clicked));
+
+	m_bbox.set_halign(Gtk::ALIGN_END);
+	m_bbox.pack_start(m_b_next);
+	m_bbox.pack_start(m_b_prefs);
+	m_bbox.pack_start(m_b_close);
+
+	m_vbox.pack_start(m_l_timer, false, false, 10);
+	m_vbox.pack_start(m_bbox, false, false, 0);
+
+	add(m_vbox);
+	m_vbox.show_all_children();
+	m_vbox.show();
+}
+
+StatusWindow::~StatusWindow()
+{
+}
+
+void StatusWindow::on_close_clicked()
+{
+	hide();
+}
+
+void StatusWindow::on_next_clicked()
+{
+	m_signal_next.emit();
+}
+
+void StatusWindow::on_prefs_clicked()
+{
+	m_signal_prefs.emit();
+}
+
 class Tomator : public Glib::ObjectBase
 {
 public:
@@ -119,8 +191,9 @@ public:
 	void on_startup();
 	void on_icon_activation();
 	void on_icon_menu_popup(guint, guint32);
-	void on_menu_edit();
 	void on_menu_exit();
+
+	void show_preferences();
 
 	int run(int, char**);
 
@@ -143,6 +216,7 @@ private:
 	Glib::RefPtr<Gtk::ActionGroup> m_action_group;
 
 	PrefsWindow *m_prefswin;
+	StatusWindow *m_statuswin;
 	Gtk::Menu *m_menu;
 
 	enum mode_t { WORK, REST };
@@ -226,13 +300,17 @@ void Tomator::on_startup()
 	m_prefswin = new PrefsWindow();
 	m_app->add_window(*m_prefswin);
 
+	m_statuswin = new StatusWindow();
+	m_statuswin->signal_prefs().connect(sigc::mem_fun(*this, &Tomator::show_preferences));
+	m_app->add_window(*m_statuswin);
+
 	m_action_group = Gtk::ActionGroup::create();
 	m_action_group->add(
 		Gtk::Action::create("exit", "Exit"),
 		sigc::mem_fun(*this, &Tomator::on_menu_exit));
 	m_action_group->add(
 		Gtk::Action::create("edit","Edit preferences"),
-		sigc::mem_fun(*this, &Tomator::on_menu_edit));
+		sigc::mem_fun(*this, &Tomator::show_preferences));
 
 	m_ui_manager = Gtk::UIManager::create();
 	m_ui_manager->insert_action_group(m_action_group);
@@ -242,7 +320,7 @@ void Tomator::on_startup()
 
 void Tomator::on_icon_activation()
 {
-	m_prefswin->show();
+	m_statuswin->show();
 }
 
 void Tomator::on_icon_menu_popup(guint button, guint32 activate_time)
@@ -250,7 +328,7 @@ void Tomator::on_icon_menu_popup(guint button, guint32 activate_time)
 	m_menu->popup(button, activate_time);
 }
 
-void Tomator::on_menu_edit()
+void Tomator::show_preferences()
 {
 	m_prefswin->show();
 }
