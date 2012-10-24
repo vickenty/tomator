@@ -113,10 +113,12 @@ public:
 
 private:
 	Gtk::Label m_l_timer;
+	Gtk::Button m_b_pause;
 	Gtk::Button m_b_prefs;
 	Gtk::Button m_b_close;
 	Gtk::Button m_b_next;
-	Gtk::ButtonBox m_bbox;
+	Gtk::ButtonBox m_bbox_act;
+	Gtk::ButtonBox m_bbox_util;
 	Gtk::VBox m_vbox;
 
 	sigc::signal<void> m_signal_next;
@@ -126,13 +128,16 @@ private:
 
 StatusWindow::StatusWindow()
 	: m_l_timer("PAUSE")
+	, m_b_pause("Pause")
 	, m_b_close("Close")
-	, m_b_prefs("Preferences")
+	, m_b_prefs("Setup")
 	, m_b_next("Next")
 {
 	set_border_width(10);
 	set_resizable(false);
 	set_type_hint(Gdk::WINDOW_TYPE_HINT_DIALOG);
+
+	set_size_request(300, -1);
 
 	Pango::FontDescription fd("Monospace 32");
 	m_l_timer.override_font(fd);
@@ -141,13 +146,17 @@ StatusWindow::StatusWindow()
 	m_b_next.signal_clicked().connect(sigc::mem_fun(*this, &StatusWindow::on_next_clicked));
 	m_b_prefs.signal_clicked().connect(sigc::mem_fun(*this, &StatusWindow::on_prefs_clicked));
 
-	m_bbox.set_halign(Gtk::ALIGN_END);
-	m_bbox.pack_start(m_b_next);
-	m_bbox.pack_start(m_b_prefs);
-	m_bbox.pack_start(m_b_close);
+	m_bbox_act.set_layout(Gtk::BUTTONBOX_SPREAD);
+	m_bbox_act.pack_start(m_b_pause);
+	m_bbox_act.pack_start(m_b_next);
+
+	m_bbox_util.set_layout(Gtk::BUTTONBOX_SPREAD);
+	m_bbox_util.pack_start(m_b_prefs);
+	m_bbox_util.pack_start(m_b_close);
 
 	m_vbox.pack_start(m_l_timer, false, false, 10);
-	m_vbox.pack_start(m_bbox, false, false, 0);
+	m_vbox.pack_start(m_bbox_act, false, false, 10);
+	m_vbox.pack_start(m_bbox_util, false, false, 10);
 
 	add(m_vbox);
 	m_vbox.show_all_children();
