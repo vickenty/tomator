@@ -119,6 +119,7 @@ public:
 	void on_startup();
 	void on_icon_activation();
 	void on_icon_menu_popup(guint, guint32);
+	void on_menu_edit();
 	void on_menu_exit();
 
 	int run(int, char**);
@@ -151,6 +152,7 @@ private:
 Glib::ustring Tomator::s_menu_xml =
 		"<ui>"
 		"	<popup name='icon_menu'>"
+		"		<menuitem action='edit'/>"
 		"		<menuitem action='exit'/>"
 		"	</popup>"
 		"</ui>";
@@ -228,6 +230,9 @@ void Tomator::on_startup()
 	m_action_group->add(
 		Gtk::Action::create("exit", "Exit"),
 		sigc::mem_fun(*this, &Tomator::on_menu_exit));
+	m_action_group->add(
+		Gtk::Action::create("edit","Edit preferences"),
+		sigc::mem_fun(*this, &Tomator::on_menu_edit));
 
 	m_ui_manager = Gtk::UIManager::create();
 	m_ui_manager->insert_action_group(m_action_group);
@@ -243,6 +248,11 @@ void Tomator::on_icon_activation()
 void Tomator::on_icon_menu_popup(guint button, guint32 activate_time)
 {
 	m_menu->popup(button, activate_time);
+}
+
+void Tomator::on_menu_edit()
+{
+	m_prefswin->show();
 }
 
 void Tomator::on_menu_exit()
