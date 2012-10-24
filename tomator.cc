@@ -134,6 +134,9 @@ StatusWindow::StatusWindow()
 	set_resizable(false);
 	set_type_hint(Gdk::WINDOW_TYPE_HINT_DIALOG);
 
+	Pango::FontDescription fd("Monospace 32");
+	m_l_timer.override_font(fd);
+
 	m_b_close.signal_clicked().connect(sigc::mem_fun(*this, &StatusWindow::on_close_clicked));
 	m_b_next.signal_clicked().connect(sigc::mem_fun(*this, &StatusWindow::on_next_clicked));
 	m_b_prefs.signal_clicked().connect(sigc::mem_fun(*this, &StatusWindow::on_prefs_clicked));
