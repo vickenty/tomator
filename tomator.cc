@@ -1,5 +1,6 @@
 #include <iostream>
 #include <gtkmm.h>
+#include "states.h"
 
 class PrefsWindow : public Gtk::Window
 {
@@ -108,8 +109,9 @@ public:
 	void on_next_clicked();
 	void on_prefs_clicked();
 
-	sigc::signal<void> signal_next() { return m_signal_next; }
-	sigc::signal<void> signal_prefs() { return m_signal_prefs; }
+	Glib::SignalProxy0<void> signal_pause() { return m_b_pause.signal_clicked(); }
+	Glib::SignalProxy0<void> signal_prefs() { return m_b_prefs.signal_clicked(); }
+	Glib::SignalProxy0<void> signal_next() { return m_b_next.signal_clicked(); }
 
 private:
 	Gtk::Label m_l_timer;
@@ -120,10 +122,6 @@ private:
 	Gtk::ButtonBox m_bbox_act;
 	Gtk::ButtonBox m_bbox_util;
 	Gtk::VBox m_vbox;
-
-	sigc::signal<void> m_signal_next;
-	sigc::signal<void> m_signal_prefs;
-
 };
 
 StatusWindow::StatusWindow()
@@ -141,8 +139,6 @@ StatusWindow::StatusWindow()
 	m_l_timer.override_font(fd);
 
 	m_b_close.signal_clicked().connect(sigc::mem_fun(*this, &StatusWindow::on_close_clicked));
-	m_b_next.signal_clicked().connect(sigc::mem_fun(*this, &StatusWindow::on_next_clicked));
-	m_b_prefs.signal_clicked().connect(sigc::mem_fun(*this, &StatusWindow::on_prefs_clicked));
 
 	m_bbox_act.set_layout(Gtk::BUTTONBOX_SPREAD);
 	m_bbox_act.set_spacing(25);
@@ -172,16 +168,6 @@ void StatusWindow::on_close_clicked()
 	hide();
 }
 
-void StatusWindow::on_next_clicked()
-{
-	m_signal_next.emit();
-}
-
-void StatusWindow::on_prefs_clicked()
-{
-	m_signal_prefs.emit();
-}
-
 class Tomator : public Glib::ObjectBase
 {
 public:
@@ -204,6 +190,7 @@ public:
 	void on_icon_activation();
 	void on_icon_menu_popup(guint, guint32);
 	void on_menu_exit();
+	void on_pause_resume();
 
 	void show_preferences();
 
@@ -231,8 +218,7 @@ private:
 	StatusWindow *m_statuswin;
 	Gtk::Menu *m_menu;
 
-	enum mode_t { WORK, REST };
-	mode_t m_mode;
+	States::Context m_context;
 };
 
 Glib::ustring Tomator::s_menu_xml =
@@ -313,6 +299,7 @@ void Tomator::on_startup()
 	m_app->add_window(*m_prefswin);
 
 	m_statuswin = new StatusWindow();
+	m_statuswin->signal_pause().connect(sigc::mem_fun(*this, &Tomator::on_pause_resume));
 	m_statuswin->signal_prefs().connect(sigc::mem_fun(*this, &Tomator::show_preferences));
 	m_app->add_window(*m_statuswin);
 
@@ -328,6 +315,8 @@ void Tomator::on_startup()
 	m_ui_manager->insert_action_group(m_action_group);
 	m_ui_manager->add_ui_from_string(Tomator::s_menu_xml);
 	m_menu = dynamic_cast<Gtk::Menu*>(m_ui_manager->get_widget("/icon_menu"));
+
+	m_context.init_state_new<States::Work>();
 }
 
 void Tomator::on_icon_activation()
@@ -348,6 +337,12 @@ void Tomator::show_preferences()
 void Tomator::on_menu_exit()
 {
 	m_app->quit();
+}
+
+void Tomator::on_pause_resume()
+{
+	Events::Pause pause;
+	m_context.send<void>(pause);
 }
 
 int main(int argc, char **argv)
