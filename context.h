@@ -1,17 +1,15 @@
 #pragma once
 #include <assert.h>
-#include "shared_ptr.h"
+#include <memory>
 
 template<typename state_base> class Context
 {
 public:
-	typedef shared_ptr<state_base> state_ptr;
-
-	template<typename state_class, typename... param_types> shared_ptr<state_class> create_state(param_types... params) {
-		return shared_ptr<state_class>(new state_class(*this, params...));
+	template<typename state_class, typename... param_types> std::shared_ptr<state_class> create_state(param_types... params) {
+		return std::shared_ptr<state_class>(new state_class(*this, params...));
 	}
 
-	void init_state(state_ptr state) {
+	void init_state(std::shared_ptr<state_base> state) {
 		assert(m_states.empty());
 		m_states.push_back(state);
 		active_state()->enter();
@@ -21,7 +19,7 @@ public:
 		init_state(create_state<state_type>(params...));
 	}
 
-	void switch_state(state_ptr state) {
+	void switch_state(std::shared_ptr<state_base> state) {
 		active_state()->leave();
 		m_states.pop_back();
 		m_states.push_back(state);
@@ -32,7 +30,7 @@ public:
 		switch_state(create_state<state_type>(params...));
 	}
 
-	void push_state(state_ptr state) {
+	void push_state(std::shared_ptr<state_base> state) {
 		active_state()->leave();
 		m_states.push_back(state);
 		active_state()->enter();
@@ -53,12 +51,12 @@ public:
 		return active_state()->handle(event);
 	}
 
-	state_ptr active_state() {
+	std::shared_ptr<state_base> active_state() {
 		assert(!m_states.empty());
 		return m_states.back();
 	}
 
 private:
-	std::vector<state_ptr> m_states;
-	state_ptr next_state;
+	std::vector<std::shared_ptr<state_base>> m_states;
+	std::shared_ptr<state_base> next_state;
 };
