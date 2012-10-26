@@ -58,5 +58,4 @@ public:
 
 private:
 	std::vector<std::shared_ptr<state_base>> m_states;
-	std::shared_ptr<state_base> next_state;
 };
