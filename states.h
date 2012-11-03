@@ -3,10 +3,17 @@
 #include "context.h"
 
 namespace Events {
-	struct Snooze {};
-	struct Pause {};
-	struct Skip {};
-	struct GetLabel {};
+	struct Base {
+		typedef void return_type;
+	};
+
+	struct Snooze : public Base {};
+	struct Pause : public Base {};
+	struct Skip : public Base {};
+
+	struct GetLabel {
+		typedef Glib::ustring return_type;
+	};
 };
 
 namespace States {

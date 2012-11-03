@@ -48,7 +48,7 @@ public:
 		state_enter();
 	}
 
-	template<typename return_type, typename event_type> return_type send(event_type& event) {
+	template<typename event_type> typename event_type::return_type send(event_type& event) {
 		return active_state()->handle(event);
 	}
 

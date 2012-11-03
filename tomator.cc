@@ -352,13 +352,13 @@ void Tomator::on_menu_exit()
 void Tomator::on_pause_resume()
 {
 	Events::Pause pause;
-	m_context.send<void>(pause);
+	m_context.send(pause);
 }
 
 void Tomator::on_state_change()
 {
 	Events::GetLabel get_label;
-	Glib::ustring label = m_context.send<Glib::ustring>(get_label);
+	Glib::ustring label = m_context.send(get_label);
 	m_statuswin->set_label(label);
 }
 
