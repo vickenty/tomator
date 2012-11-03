@@ -42,6 +42,8 @@ public:
 	virtual void enter();
 	virtual void leave();
 
+	Glib::ustring format_time_label(int seconds);
+
 protected:
 	Context& m_context;
 

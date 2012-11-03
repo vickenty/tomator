@@ -2,10 +2,13 @@
 #include <assert.h>
 #include <memory>
 #include <sigc++/sigc++.h>
+#include "config.h"
 
 template<typename state_base> class Context
 {
 public:
+	Context(Configuration& config) : m_config(config) {}
+
 	template<typename state_class, typename... param_types> std::shared_ptr<state_class> create_state(param_types... params) {
 		return std::shared_ptr<state_class>(new state_class(*this, params...));
 	}
@@ -61,6 +64,10 @@ public:
 		return m_state_changed_signal;
 	}
 
+	Configuration& config() {
+		return m_config;
+	}
+
 private:
 	void state_enter() {
 		active_state()->enter();
@@ -69,4 +76,5 @@ private:
 
 	std::vector<std::shared_ptr<state_base>> m_states;
 	sigc::signal<void> m_state_changed_signal;
+	Configuration& m_config;
 };

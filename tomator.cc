@@ -240,6 +240,7 @@ Glib::ustring Tomator::s_menu_xml =
 
 Tomator::Tomator(Glib::RefPtr<Gtk::Application> app)
 	: m_app(app)
+	, m_context(m_config)
 {
 }
 

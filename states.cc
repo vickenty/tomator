@@ -1,4 +1,4 @@
-#include <iostream>
+#include <iomanip>
 #include <gtkmm.h>
 #include "states.h"
 
@@ -12,6 +12,13 @@ void Base::enter()
 void Base::leave()
 {
 	signal_state_leave().emit(this);
+}
+
+Glib::ustring Base::format_time_label(int seconds)
+{
+	return Glib::ustring::compose("%1:%2",
+		Glib::ustring::format(std::setfill(L'0'), std::setw(2), seconds / 60),
+		Glib::ustring::format(std::setfill(L'0'), std::setw(2), seconds % 60));
 }
 
 void Pause::handle(Events::Pause&)
@@ -36,7 +43,8 @@ void Work::handle(Events::Skip&)
 
 Glib::ustring Work::handle(Events::GetLabel&)
 {
-	return "WORKING";
+	guint time = m_context.config().get_work_time() * 60;
+	return format_time_label(time);
 }
 
 void RestPending::handle(Events::Skip&)
@@ -56,7 +64,8 @@ void Rest::handle(Events::Skip&)
 
 Glib::ustring Rest::handle(Events::GetLabel&)
 {
-	return "RESTING";
+	guint time = m_context.config().get_rest_time() * 60;
+	return format_time_label(time);
 }
 
 void WorkPending::handle(Events::Skip&)
