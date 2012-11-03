@@ -1,11 +1,12 @@
 #include <iostream>
 #include <gtkmm.h>
 #include "states.h"
+#include "config.h"
 
 class PrefsWindow : public Gtk::Window
 {
 public:
-	PrefsWindow();
+	PrefsWindow(Configuration &);
 	virtual ~PrefsWindow();
 
 	void on_close_clicked();
@@ -25,22 +26,24 @@ private:
 	Gtk::SpinButton m_s_snooze;
 	Gtk::ButtonBox m_bbox;
 	Gtk::Button m_b_close;
+	Configuration &m_config;
 };
 
-PrefsWindow::PrefsWindow()
+PrefsWindow::PrefsWindow(Configuration &config)
 	: m_b_close("Close")
 	, m_l_work("Work time", Gtk::ALIGN_START)
 	, m_l_rest("Rest time", Gtk::ALIGN_START)
 	, m_l_snooze("Snooze time", Gtk::ALIGN_START)
+	, m_config(config)
 {
 	set_border_width(10);
 	set_resizable(false);
 	set_type_hint(Gdk::WINDOW_TYPE_HINT_DIALOG);
 	m_b_close.signal_clicked().connect(sigc::mem_fun(*this, &PrefsWindow::on_close_clicked));
 
-	Glib::RefPtr<Gtk::Adjustment> work_time = Gtk::Adjustment::create(25, 1, 120, 1, 5);
-	Glib::RefPtr<Gtk::Adjustment> rest_time = Gtk::Adjustment::create(5, 1, 120, 1, 5);
-	Glib::RefPtr<Gtk::Adjustment> snooze_time = Gtk::Adjustment::create(5, 1, 120, 1, 5);
+	Glib::RefPtr<Gtk::Adjustment> work_time = Gtk::Adjustment::create(config.get_work_time(), 1, 120, 1, 5);
+	Glib::RefPtr<Gtk::Adjustment> rest_time = Gtk::Adjustment::create(config.get_rest_time(), 1, 120, 1, 5);
+	Glib::RefPtr<Gtk::Adjustment> snooze_time = Gtk::Adjustment::create(config.get_snooze_time(), 1, 120, 1, 5);
 
 	m_s_work.configure(work_time, 1, 0);
 	work_time->signal_value_changed().connect(sigc::mem_fun(*this, &PrefsWindow::on_work_time_changed));
@@ -89,14 +92,17 @@ void PrefsWindow::on_close_clicked()
 
 void PrefsWindow::on_work_time_changed()
 {
+	m_config.set_work_time(m_s_work.get_value());
 }
 
 void PrefsWindow::on_rest_time_changed()
 {
+	m_config.set_rest_time(m_s_rest.get_value());
 }
 
 void PrefsWindow::on_snooze_time_changed()
 {
+	m_config.set_snooze_time(m_s_snooze.get_value());
 }
 
 class StatusWindow : public Gtk::Window
@@ -210,11 +216,6 @@ public:
 private:
 	Tomator(Glib::RefPtr<Gtk::Application>);
 
-	int m_work_time;
-	int m_rest_time;
-	int m_snooze_time;
-
-	sigc::connection m_timer;
 	Glib::RefPtr<Gtk::Application> m_app;
 	Glib::RefPtr<Gtk::StatusIcon> m_icon;
 
@@ -226,6 +227,7 @@ private:
 	Gtk::Menu *m_menu;
 
 	States::Context m_context;
+	Configuration m_config;
 };
 
 Glib::ustring Tomator::s_menu_xml =
@@ -253,36 +255,6 @@ int Tomator::run(int argc, char** argv)
 	return m_app->run(argc, argv);
 }
 
-void Tomator::set_work_time(int time)
-{
-	m_work_time = time;
-}
-
-int Tomator::get_work_time()
-{
-	return m_work_time;
-}
-
-void Tomator::set_rest_time(int time)
-{
-	m_rest_time = time;
-}
-
-int Tomator::get_rest_time()
-{
-	return m_rest_time;
-}
-
-void Tomator::set_snooze_time(int time)
-{
-	m_snooze_time = time;
-}
-
-int Tomator::get_snooze_time()
-{
-	return m_snooze_time;
-}
-
 void Tomator::on_startup()
 {
 	m_icon = Gtk::StatusIcon::create(Gtk::Stock::FILE);
@@ -291,7 +263,7 @@ void Tomator::on_startup()
 	m_icon->signal_activate().connect(sigc::mem_fun(*this, &Tomator::on_icon_activation));
 	m_icon->signal_popup_menu().connect(sigc::mem_fun(*this, &Tomator::on_icon_menu_popup));
 
-	m_prefswin = new PrefsWindow();
+	m_prefswin = new PrefsWindow(m_config);
 	m_app->add_window(*m_prefswin);
 
 	m_statuswin = new StatusWindow();
