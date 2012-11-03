@@ -191,8 +191,6 @@ public:
 	void start();
 	void snooze();
 
-	void schedule();
-	bool on_timeout();
 	void on_startup();
 	void on_icon_activation();
 	void on_icon_menu_popup(guint, guint32);
@@ -200,6 +198,7 @@ public:
 	void on_pause_resume();
 	void on_state_change();
 
+	void switch_to_next();
 	void show_preferences();
 
 	int run(int, char**);
@@ -284,17 +283,6 @@ int Tomator::get_snooze_time()
 	return m_snooze_time;
 }
 
-void Tomator::schedule()
-{
-	m_timer = Glib::signal_timeout().connect(sigc::mem_fun(*this, &Tomator::on_timeout), 1000);
-}
-
-bool Tomator::on_timeout()
-{
-	std::cout << "YAY" << std::endl;
-	return false;
-}
-
 void Tomator::on_startup()
 {
 	m_icon = Gtk::StatusIcon::create(Gtk::Stock::FILE);
@@ -309,6 +297,7 @@ void Tomator::on_startup()
 	m_statuswin = new StatusWindow();
 	m_statuswin->signal_pause().connect(sigc::mem_fun(*this, &Tomator::on_pause_resume));
 	m_statuswin->signal_prefs().connect(sigc::mem_fun(*this, &Tomator::show_preferences));
+	m_statuswin->signal_next().connect(sigc::mem_fun(*this, &Tomator::switch_to_next));
 	m_app->add_window(*m_statuswin);
 
 	m_action_group = Gtk::ActionGroup::create();
@@ -327,6 +316,8 @@ void Tomator::on_startup()
 	m_context.signal_state_changed().connect(sigc::mem_fun(*this, &Tomator::on_state_change));
 
 	m_context.init_state_new<States::Work>();
+
+	m_statuswin->show();
 }
 
 void Tomator::on_icon_activation()
@@ -360,6 +351,12 @@ void Tomator::on_state_change()
 	Events::GetLabel get_label;
 	Glib::ustring label = m_context.send(get_label);
 	m_statuswin->set_label(label);
+}
+
+void Tomator::switch_to_next()
+{
+	Events::Skip skip;
+	m_context.send(skip);
 }
 
 int main(int argc, char **argv)

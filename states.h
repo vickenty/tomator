@@ -63,7 +63,31 @@ class Work : public Base
 public:
 	Work(Context& context) : Base(context) {}
 	virtual void handle(Events::Pause&);
+	virtual void handle(Events::Skip&);
 	virtual Glib::ustring handle(Events::GetLabel&);
+};
+
+class RestPending : public Base
+{
+public:
+	RestPending(Context& context) : Base(context) {}
+	virtual void handle(Events::Skip&);
+};
+
+class Rest : public Base
+{
+public:
+	Rest(Context& context) : Base(context) {}
+	virtual void handle(Events::Pause&);
+	virtual void handle(Events::Skip&);
+	virtual Glib::ustring handle(Events::GetLabel&);
+};
+
+class WorkPending : public Base
+{
+public:
+	WorkPending(Context& context) : Base(context) {}
+	virtual void handle(Events::Skip&);
 };
 
 }
