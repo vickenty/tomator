@@ -4,14 +4,14 @@
 
 namespace States {
 
-void Pause::enter()
+void Base::enter()
 {
-	std::cout << "pause enter" << std::endl;
+	signal_state_enter().emit(this);
 }
 
-void Pause::leave()
+void Base::leave()
 {
-	std::cout << "pause leave" << std::endl;
+	signal_state_leave().emit(this);
 }
 
 void Pause::handle(Events::Pause&)
@@ -19,20 +19,19 @@ void Pause::handle(Events::Pause&)
 	m_context.pop_state();
 }
 
-void Work::enter()
+Glib::ustring Pause::handle(Events::GetLabel&)
 {
-	std::cout << "work enter" << std::endl;
+	return "PAUSED";
 }
-
-void Work::leave()
-{
-	std::cout << "work leave" << std::endl;
-}
-
 
 void Work::handle(Events::Pause&)
 {
 	m_context.push_state_new<Pause>();
+}
+
+Glib::ustring Work::handle(Events::GetLabel&)
+{
+	return "WORKING";
 }
 
 }

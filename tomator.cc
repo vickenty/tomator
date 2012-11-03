@@ -109,6 +109,8 @@ public:
 	void on_next_clicked();
 	void on_prefs_clicked();
 
+	void set_label(const Glib::ustring&);
+
 	Glib::SignalProxy0<void> signal_pause() { return m_b_pause.signal_clicked(); }
 	Glib::SignalProxy0<void> signal_prefs() { return m_b_prefs.signal_clicked(); }
 	Glib::SignalProxy0<void> signal_next() { return m_b_next.signal_clicked(); }
@@ -168,6 +170,11 @@ void StatusWindow::on_close_clicked()
 	hide();
 }
 
+void StatusWindow::set_label(const Glib::ustring& label)
+{
+	m_l_timer.set_label(label);
+}
+
 class Tomator : public Glib::ObjectBase
 {
 public:
@@ -191,6 +198,7 @@ public:
 	void on_icon_menu_popup(guint, guint32);
 	void on_menu_exit();
 	void on_pause_resume();
+	void on_state_change();
 
 	void show_preferences();
 
@@ -316,6 +324,8 @@ void Tomator::on_startup()
 	m_ui_manager->add_ui_from_string(Tomator::s_menu_xml);
 	m_menu = dynamic_cast<Gtk::Menu*>(m_ui_manager->get_widget("/icon_menu"));
 
+	m_context.signal_state_changed().connect(sigc::mem_fun(*this, &Tomator::on_state_change));
+
 	m_context.init_state_new<States::Work>();
 }
 
@@ -343,6 +353,13 @@ void Tomator::on_pause_resume()
 {
 	Events::Pause pause;
 	m_context.send<void>(pause);
+}
+
+void Tomator::on_state_change()
+{
+	Events::GetLabel get_label;
+	Glib::ustring label = m_context.send<Glib::ustring>(get_label);
+	m_statuswin->set_label(label);
 }
 
 int main(int argc, char **argv)
