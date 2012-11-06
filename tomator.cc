@@ -202,7 +202,8 @@ public:
 	void on_icon_menu_popup(guint, guint32);
 	void on_menu_exit();
 	void on_pause_resume();
-	void on_state_change();
+	bool on_update_timer();
+	void update_label();
 
 	void switch_to_next();
 	void show_preferences();
@@ -221,6 +222,8 @@ private:
 
 	Glib::RefPtr<Gtk::UIManager> m_ui_manager;
 	Glib::RefPtr<Gtk::ActionGroup> m_action_group;
+
+	sigc::connection m_update_timer;
 
 	PrefsWindow *m_prefswin;
 	StatusWindow *m_statuswin;
@@ -286,7 +289,8 @@ void Tomator::on_startup()
 	m_ui_manager->add_ui_from_string(Tomator::s_menu_xml);
 	m_menu = dynamic_cast<Gtk::Menu*>(m_ui_manager->get_widget("/icon_menu"));
 
-	m_context.signal_state_changed().connect(sigc::mem_fun(*this, &Tomator::on_state_change));
+	m_context.signal_state_changed().connect(sigc::mem_fun(*this, &Tomator::update_label));
+	m_update_timer = Glib::signal_timeout().connect(sigc::mem_fun(*this, &Tomator::on_update_timer), 100);
 
 	m_context.init_state_new<States::Work>();
 
@@ -319,11 +323,17 @@ void Tomator::on_pause_resume()
 	m_context.send(pause);
 }
 
-void Tomator::on_state_change()
+void Tomator::update_label()
 {
 	Events::GetLabel get_label;
 	Glib::ustring label = m_context.send(get_label);
 	m_statuswin->set_label(label);
+}
+
+bool Tomator::on_update_timer()
+{
+	update_label();
+	return true;
 }
 
 void Tomator::switch_to_next()

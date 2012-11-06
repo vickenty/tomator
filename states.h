@@ -42,7 +42,7 @@ public:
 	virtual void enter();
 	virtual void leave();
 
-	Glib::ustring format_time_label(int seconds);
+	Glib::ustring format_time_label(gulong);
 
 protected:
 	Context& m_context;
@@ -63,10 +63,21 @@ public:
 class Work : public Base
 {
 public:
-	Work(Context& context) : Base(context) {}
+	Work(Context& context, guint msec = 0) : Base(context), m_time_msec(msec) {}
 	virtual void handle(Events::Pause&);
 	virtual void handle(Events::Skip&);
 	virtual Glib::ustring handle(Events::GetLabel&);
+
+	virtual void enter();
+	virtual void leave();
+
+	bool on_timeout();
+
+	guint elapsed();
+private:
+	guint m_time_msec;
+	sigc::connection m_timer_conn;
+	Glib::Timer m_timer;
 };
 
 class RestPending : public Base
@@ -74,6 +85,7 @@ class RestPending : public Base
 public:
 	RestPending(Context& context) : Base(context) {}
 	virtual void handle(Events::Skip&);
+	virtual Glib::ustring handle(Events::GetLabel&);
 };
 
 class Rest : public Base
