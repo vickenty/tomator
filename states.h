@@ -60,24 +60,36 @@ public:
 	virtual Glib::ustring handle(Events::GetLabel&);
 };
 
-class Work : public Base
+class TimerState : public Base
 {
 public:
-	Work(Context& context, guint msec = 0) : Base(context), m_time_msec(msec) {}
+	TimerState(Context& context, guint msec = 0) : Base(context), m_time_msec(msec) {}
+
 	virtual void handle(Events::Pause&);
-	virtual void handle(Events::Skip&);
 	virtual Glib::ustring handle(Events::GetLabel&);
 
 	virtual void enter();
 	virtual void leave();
 
-	bool on_timeout();
+	virtual bool on_timeout() { return false; }
+	virtual guint default_timeout() { return 0; }
 
 	guint elapsed();
+
 private:
 	guint m_time_msec;
 	sigc::connection m_timer_conn;
 	Glib::Timer m_timer;
+};
+
+class Work : public TimerState
+{
+public:
+	Work(Context& context, guint msec = 0) : TimerState(context, msec) {}
+	virtual void handle(Events::Skip&);
+
+	virtual bool on_timeout();
+	virtual guint default_timeout();
 };
 
 class RestPending : public Base
@@ -88,13 +100,14 @@ public:
 	virtual Glib::ustring handle(Events::GetLabel&);
 };
 
-class Rest : public Base
+class Rest : public TimerState
 {
 public:
-	Rest(Context& context) : Base(context) {}
-	virtual void handle(Events::Pause&);
+	Rest(Context& context, int msec = 0) : TimerState(context, msec) {}
 	virtual void handle(Events::Skip&);
-	virtual Glib::ustring handle(Events::GetLabel&);
+
+	virtual bool on_timeout();
+	virtual guint default_timeout();
 };
 
 class WorkPending : public Base
@@ -102,6 +115,7 @@ class WorkPending : public Base
 public:
 	WorkPending(Context& context) : Base(context) {}
 	virtual void handle(Events::Skip&);
+	virtual Glib::ustring handle(Events::GetLabel&);
 };
 
 }

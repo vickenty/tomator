@@ -32,23 +32,43 @@ Glib::ustring Pause::handle(Events::GetLabel&)
 	return "PAUSED";
 }
 
-void Work::enter()
+void TimerState::enter()
 {
 	Base::enter();
 
 	if (m_time_msec == 0)
-		m_time_msec = m_context.config().get_work_time() * 60000;
+		m_time_msec = default_timeout();
 
-	m_timer_conn = Glib::signal_timeout().connect(sigc::mem_fun(*this, &Work::on_timeout), m_time_msec);
+	m_timer_conn = Glib::signal_timeout().connect(sigc::mem_fun(*this, &TimerState::on_timeout), m_time_msec);
 	m_timer.reset();
 }
 
-void Work::leave()
+void TimerState::leave()
 {
-	m_time_msec -= elapsed();
-
 	Base::leave();
+	m_time_msec -= elapsed();
 	m_timer_conn.disconnect();
+}
+
+void TimerState::handle(Events::Pause&)
+{
+	m_context.push_state_new<Pause>();
+}
+
+Glib::ustring TimerState::handle(Events::GetLabel&)
+{
+	return format_time_label(m_time_msec - elapsed());
+}
+
+
+guint TimerState::elapsed()
+{
+	return m_timer.elapsed() * 1000;
+}
+
+guint Work::default_timeout()
+{
+	return m_context.config().get_work_time() * 60000;
 }
 
 bool Work::on_timeout()
@@ -57,24 +77,9 @@ bool Work::on_timeout()
 	return false;
 }
 
-guint Work::elapsed()
-{
-	return m_timer.elapsed() * 1000;
-}
-
-void Work::handle(Events::Pause&)
-{
-	m_context.push_state_new<Pause>();
-}
-
 void Work::handle(Events::Skip&)
 {
 	m_context.switch_state_new<Rest>();
-}
-
-Glib::ustring Work::handle(Events::GetLabel&)
-{
-	return format_time_label(m_time_msec - elapsed());
 }
 
 void RestPending::handle(Events::Skip&)
@@ -87,9 +92,15 @@ Glib::ustring RestPending::handle(Events::GetLabel&)
 	return "REST";
 }
 
-void Rest::handle(Events::Pause&)
+bool Rest::on_timeout()
 {
-	m_context.push_state_new<Pause>();
+	m_context.switch_state_new<WorkPending>();
+	return false;
+}
+
+guint Rest::default_timeout()
+{
+	return m_context.config().get_rest_time() * 60000;
 }
 
 void Rest::handle(Events::Skip&)
@@ -97,15 +108,14 @@ void Rest::handle(Events::Skip&)
 	m_context.switch_state_new<Work>();
 }
 
-Glib::ustring Rest::handle(Events::GetLabel&)
-{
-	guint time = m_context.config().get_rest_time() * 60000;
-	return format_time_label(time);
-}
-
 void WorkPending::handle(Events::Skip&)
 {
 	m_context.switch_state_new<Work>();
+}
+
+Glib::ustring WorkPending::handle(Events::GetLabel&)
+{
+	return "WORK";
 }
 
 }
