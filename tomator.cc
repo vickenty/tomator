@@ -1,5 +1,6 @@
 #include <iostream>
 #include <gtkmm.h>
+#include <libnotify/notify.h>
 #include "states.h"
 #include "config.h"
 
@@ -346,5 +347,6 @@ int main(int argc, char **argv)
 {
 	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("org.tomator.core");
 	Glib::RefPtr<Tomator> core = Tomator::create(app);
+	notify_init("Tomator");
 	return core->run(argc, argv);
 }

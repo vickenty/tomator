@@ -1,6 +1,7 @@
 #include <iomanip>
 #include <gtkmm.h>
 #include "states.h"
+#include "notification.h"
 
 namespace States {
 
@@ -82,6 +83,12 @@ void Work::handle(Events::Skip&)
 	m_context.switch_state_new<Rest>();
 }
 
+void RestPending::enter()
+{
+	Base::enter();
+	Notification("Tomator", "Get some rest").show();
+}
+
 void RestPending::handle(Events::Skip&)
 {
 	m_context.switch_state_new<Rest>();
@@ -106,6 +113,12 @@ guint Rest::default_timeout()
 void Rest::handle(Events::Skip&)
 {
 	m_context.switch_state_new<Work>();
+}
+
+void WorkPending::enter()
+{
+	Base::enter();
+	Notification("Tomator", "Time to get to work").show();
 }
 
 void WorkPending::handle(Events::Skip&)

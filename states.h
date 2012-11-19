@@ -98,6 +98,8 @@ public:
 	RestPending(Context& context) : Base(context) {}
 	virtual void handle(Events::Skip&);
 	virtual Glib::ustring handle(Events::GetLabel&);
+
+	virtual void enter();
 };
 
 class Rest : public TimerState
@@ -116,6 +118,8 @@ public:
 	WorkPending(Context& context) : Base(context) {}
 	virtual void handle(Events::Skip&);
 	virtual Glib::ustring handle(Events::GetLabel&);
+
+	virtual void enter();
 };
 
 }
