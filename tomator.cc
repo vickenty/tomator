@@ -262,7 +262,7 @@ int Tomator::run(int argc, char** argv)
 
 void Tomator::on_startup()
 {
-	m_icon = Gtk::StatusIcon::create(Gtk::Stock::FILE);
+	m_icon = Gtk::StatusIcon::create_from_file("tomator.png");
 	m_icon->set_has_tooltip();
 	m_icon->set_tooltip_text("Tomator");
 	m_icon->signal_activate().connect(sigc::mem_fun(*this, &Tomator::on_icon_activation));
