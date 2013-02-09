@@ -3,6 +3,7 @@
 #include <libnotify/notify.h>
 #include "states.h"
 #include "config.h"
+#include "icons.h"
 
 class PrefsWindow : public Gtk::Window
 {
@@ -265,7 +266,7 @@ void Tomator::on_startup()
 {
 	m_config.load();
 
-	m_icon = Gtk::StatusIcon::create_from_file("tomator.png");
+	m_icon = Gtk::StatusIcon::create(get_app_icon());
 	m_icon->set_has_tooltip();
 	m_icon->set_tooltip_text("Tomator");
 	m_icon->signal_activate().connect(sigc::mem_fun(*this, &Tomator::on_icon_activation));
