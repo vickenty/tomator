@@ -88,6 +88,7 @@ PrefsWindow::~PrefsWindow()
 
 void PrefsWindow::on_close_clicked()
 {
+	m_config.save();
 	hide();
 }
 
@@ -262,6 +263,8 @@ int Tomator::run(int argc, char** argv)
 
 void Tomator::on_startup()
 {
+	m_config.load();
+
 	m_icon = Gtk::StatusIcon::create_from_file("tomator.png");
 	m_icon->set_has_tooltip();
 	m_icon->set_tooltip_text("Tomator");
@@ -295,7 +298,7 @@ void Tomator::on_startup()
 
 	m_context.init_state_new<States::Work>();
 
-	m_statuswin->show();
+	//m_statuswin->show();
 }
 
 void Tomator::on_icon_activation()

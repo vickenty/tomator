@@ -33,6 +33,9 @@ public:
 		m_snooze_time = value;
 	}
 
+	void load();
+	void save();
+
 private:
 	guint m_work_time;
 	guint m_rest_time;
