@@ -4,6 +4,7 @@
 #include "states.h"
 #include "config.h"
 #include "icons.h"
+#include "indicator.h"
 
 class PrefsWindow : public Gtk::Window
 {
@@ -209,6 +210,7 @@ public:
 	void update_label();
 
 	void switch_to_next();
+	void show_status();
 	void show_preferences();
 
 	int run(int, char**);
@@ -221,7 +223,8 @@ private:
 	Tomator(Glib::RefPtr<Gtk::Application>);
 
 	Glib::RefPtr<Gtk::Application> m_app;
-	Glib::RefPtr<Gtk::StatusIcon> m_icon;
+
+	Indicator m_indicator;
 
 	Glib::RefPtr<Gtk::UIManager> m_ui_manager;
 	Glib::RefPtr<Gtk::ActionGroup> m_action_group;
@@ -239,6 +242,9 @@ private:
 Glib::ustring Tomator::s_menu_xml =
 		"<ui>"
 		"	<popup name='icon_menu'>"
+		"		<menuitem action='show'/>"
+		"		<menuitem action='next'/>"
+		"		<menuitem action='pause'/>"
 		"		<menuitem action='edit'/>"
 		"		<menuitem action='exit'/>"
 		"	</popup>"
@@ -266,12 +272,6 @@ void Tomator::on_startup()
 {
 	m_config.load();
 
-	m_icon = Gtk::StatusIcon::create(get_app_icon());
-	m_icon->set_has_tooltip();
-	m_icon->set_tooltip_text("Tomator");
-	m_icon->signal_activate().connect(sigc::mem_fun(*this, &Tomator::on_icon_activation));
-	m_icon->signal_popup_menu().connect(sigc::mem_fun(*this, &Tomator::on_icon_menu_popup));
-
 	m_prefswin = new PrefsWindow(m_config);
 	m_app->add_window(*m_prefswin);
 
@@ -288,6 +288,15 @@ void Tomator::on_startup()
 	m_action_group->add(
 		Gtk::Action::create("edit","Edit preferences"),
 		sigc::mem_fun(*this, &Tomator::show_preferences));
+	m_action_group->add(
+		Gtk::Action::create("show", "Show timer"),
+		sigc::mem_fun(*this, &Tomator::show_status));
+	m_action_group->add(
+		Gtk::Action::create("pause", "Pause"),
+		sigc::mem_fun(*this, &Tomator::on_pause_resume));
+	m_action_group->add(
+		Gtk::Action::create("next", "Next"),
+		sigc::mem_fun(*this, &Tomator::switch_to_next));
 
 	m_ui_manager = Gtk::UIManager::create();
 	m_ui_manager->insert_action_group(m_action_group);
@@ -299,17 +308,14 @@ void Tomator::on_startup()
 
 	m_context.init_state_new<States::Work>();
 
-	//m_statuswin->show();
+#ifndef USE_STATUSICON
+	m_indicator.set_active(true);
+	m_indicator.set_menu(m_menu);
+#endif
 }
 
-void Tomator::on_icon_activation()
-{
+void Tomator::show_status() {
 	m_statuswin->show();
-}
-
-void Tomator::on_icon_menu_popup(guint button, guint32 activate_time)
-{
-	m_menu->popup(button, activate_time);
 }
 
 void Tomator::show_preferences()
@@ -333,6 +339,7 @@ void Tomator::update_label()
 	Events::GetLabel get_label;
 	Glib::ustring label = m_context.send(get_label);
 	m_statuswin->set_label(label);
+	m_indicator.set_label(label);
 }
 
 bool Tomator::on_update_timer()
