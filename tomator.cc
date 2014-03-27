@@ -3,7 +3,6 @@
 #include <libnotify/notify.h>
 #include "states.h"
 #include "config.h"
-#include "icons.h"
 #include "indicator.h"
 
 class PrefsWindow : public Gtk::Window
