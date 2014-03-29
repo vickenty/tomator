@@ -5,6 +5,14 @@
 
 namespace States {
 
+void show_notification(Glib::ustring msg)
+{
+	auto theme = Gtk::IconTheme::get_default();
+	auto info = theme->lookup_icon("tomator", 0, Gtk::ICON_LOOKUP_FORCE_SVG);
+	auto path = info.get_filename();
+	Notification("Tomator", msg.c_str(), path.c_str()).show();
+}
+
 void Base::enter()
 {
 	signal_state_enter().emit(this);
@@ -83,10 +91,11 @@ void Work::handle(Events::Skip&)
 	m_context.switch_state_new<Rest>();
 }
 
+
 void RestPending::enter()
 {
 	Base::enter();
-	Notification("Tomator", "Get some rest").show();
+	show_notification("Get some rest");
 }
 
 void RestPending::handle(Events::Skip&)
@@ -118,7 +127,7 @@ void Rest::handle(Events::Skip&)
 void WorkPending::enter()
 {
 	Base::enter();
-	Notification("Tomator", "Time to get to work").show();
+	show_notification("Time to get to work");
 }
 
 void WorkPending::handle(Events::Skip&)
