@@ -41,6 +41,7 @@ PrefsWindow::PrefsWindow(Configuration &config)
 	set_border_width(10);
 	set_resizable(false);
 	set_type_hint(Gdk::WINDOW_TYPE_HINT_DIALOG);
+	set_icon_name("tomator");
 	m_b_close.signal_clicked().connect(sigc::mem_fun(*this, &PrefsWindow::on_close_clicked));
 
 	Glib::RefPtr<Gtk::Adjustment> work_time = Gtk::Adjustment::create(config.get_work_time(), 1, 120, 1, 5);
@@ -145,6 +146,7 @@ StatusWindow::StatusWindow()
 	set_border_width(10);
 	set_resizable(false);
 	set_type_hint(Gdk::WINDOW_TYPE_HINT_DIALOG);
+	set_icon_name("tomator");
 
 	Pango::FontDescription fd("Monospace 32");
 	m_l_timer.override_font(fd);
@@ -207,6 +209,7 @@ public:
 	void on_pause_resume();
 	bool on_update_timer();
 	void update_label();
+	void init_icon_theme();
 
 	void switch_to_next();
 	void show_status();
@@ -267,9 +270,19 @@ int Tomator::run(int argc, char** argv)
 	return m_app->run(argc, argv);
 }
 
+void Tomator::init_icon_theme() {
+	auto theme = Gtk::IconTheme::get_default();
+	std::string prefix = Glib::get_current_dir() + "/icons";
+	theme->append_search_path(prefix);
+}
+
 void Tomator::on_startup()
 {
+	Glib::set_application_name("Tomator");
+
 	m_config.load();
+
+	init_icon_theme();
 
 	m_prefswin = new PrefsWindow(m_config);
 	m_app->add_window(*m_prefswin);
