@@ -36,9 +36,19 @@ void Pause::handle(Events::Pause&)
 	m_context.pop_state();
 }
 
-Glib::ustring Pause::handle(Events::GetLabel&)
+Glib::ustring Pause::handle(Events::GetClock&)
 {
 	return "PAUSED";
+}
+
+Glib::ustring Pause::handle(Events::GetLabel&)
+{
+	return "";
+}
+
+Glib::ustring Pause::handle(Events::GetIcon&)
+{
+	return "tomator-pause";
 }
 
 void TimerState::enter()
@@ -64,7 +74,7 @@ void TimerState::handle(Events::Pause&)
 	m_context.push_state_new<Pause>();
 }
 
-Glib::ustring TimerState::handle(Events::GetLabel&)
+Glib::ustring TimerState::handle(Events::GetClock&)
 {
 	return format_time_label(m_time_msec - elapsed());
 }
@@ -103,7 +113,7 @@ void RestPending::handle(Events::Skip&)
 	m_context.switch_state_new<Rest>();
 }
 
-Glib::ustring RestPending::handle(Events::GetLabel&)
+Glib::ustring RestPending::handle(Events::GetClock&)
 {
 	return "REST";
 }
@@ -135,7 +145,7 @@ void WorkPending::handle(Events::Skip&)
 	m_context.switch_state_new<Work>();
 }
 
-Glib::ustring WorkPending::handle(Events::GetLabel&)
+Glib::ustring WorkPending::handle(Events::GetClock&)
 {
 	return "WORK";
 }

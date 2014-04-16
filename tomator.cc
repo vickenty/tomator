@@ -348,10 +348,19 @@ void Tomator::on_pause_resume()
 
 void Tomator::update_label()
 {
+	Glib::ustring str;
+
 	Events::GetLabel get_label;
-	Glib::ustring label = m_context.send(get_label);
-	m_statuswin->set_label(label);
-	m_indicator.set_label(label);
+	str = m_context.send(get_label);
+	m_indicator.set_label(str);
+
+	Events::GetIcon get_icon;
+	str = m_context.send(get_icon);
+	m_indicator.set_icon(str);
+
+	Events::GetClock get_clock;
+	str = m_context.send(get_clock);
+	m_statuswin->set_label(str);
 }
 
 bool Tomator::on_update_timer()

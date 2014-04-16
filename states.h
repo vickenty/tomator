@@ -14,6 +14,9 @@ namespace Events {
 	struct GetLabel {
 		typedef Glib::ustring return_type;
 	};
+
+	struct GetIcon : public GetLabel {};
+	struct GetClock : public GetLabel {};
 };
 
 namespace States {
@@ -29,7 +32,9 @@ public:
 	virtual void handle(Events::Snooze&) {}
 	virtual void handle(Events::Pause&) {}
 	virtual void handle(Events::Skip&) {}
-	virtual Glib::ustring handle(Events::GetLabel&) { return ""; }
+	virtual Glib::ustring handle(Events::GetLabel&) { Events::GetClock ev; return handle(ev); }
+	virtual Glib::ustring handle(Events::GetIcon&) { return "tomator-panel"; }
+	virtual Glib::ustring handle(Events::GetClock&) { return ""; }
 
 	inline sigc::signal<void, Base*> signal_state_enter() {
 		return m_state_enter_slot;
@@ -58,6 +63,8 @@ public:
 
 	virtual void handle(Events::Pause&);
 	virtual Glib::ustring handle(Events::GetLabel&);
+	virtual Glib::ustring handle(Events::GetClock&);
+	virtual Glib::ustring handle(Events::GetIcon&);
 };
 
 class TimerState : public Base
@@ -66,7 +73,7 @@ public:
 	TimerState(Context& context, guint msec = 0) : Base(context), m_time_msec(msec) {}
 
 	virtual void handle(Events::Pause&);
-	virtual Glib::ustring handle(Events::GetLabel&);
+	virtual Glib::ustring handle(Events::GetClock&);
 
 	virtual void enter();
 	virtual void leave();
@@ -97,7 +104,7 @@ class RestPending : public Base
 public:
 	RestPending(Context& context) : Base(context) {}
 	virtual void handle(Events::Skip&);
-	virtual Glib::ustring handle(Events::GetLabel&);
+	virtual Glib::ustring handle(Events::GetClock&);
 
 	virtual void enter();
 };
@@ -117,7 +124,7 @@ class WorkPending : public Base
 public:
 	WorkPending(Context& context) : Base(context) {}
 	virtual void handle(Events::Skip&);
-	virtual Glib::ustring handle(Events::GetLabel&);
+	virtual Glib::ustring handle(Events::GetClock&);
 
 	virtual void enter();
 };

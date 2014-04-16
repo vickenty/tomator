@@ -47,6 +47,10 @@ public:
 		app_indicator_set_label(m_obj, label.c_str(), NULL);
 	}
 
+	void set_icon(Glib::ustring &icon) {
+		app_indicator_set_icon(m_obj, icon.c_str());
+	}
+
 private:
 	AppIndicator *m_obj;
 };
