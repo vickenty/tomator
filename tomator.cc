@@ -319,6 +319,8 @@ void Tomator::on_startup()
 	m_update_timer = Glib::signal_timeout().connect(sigc::mem_fun(*this, &Tomator::on_update_timer), 100);
 
 	m_context.init_state_new<States::Work>();
+	Events::Pause pause;
+	m_context.send(pause);
 
 #ifndef USE_STATUSICON
 	m_indicator.set_active(true);
