@@ -321,11 +321,6 @@ void Tomator::on_startup()
 	m_context.init_state_new<States::Work>();
 	Events::Pause pause;
 	m_context.send(pause);
-
-#ifndef USE_STATUSICON
-	m_indicator.set_active(true);
-	m_indicator.set_menu(m_menu);
-#endif
 }
 
 void Tomator::show_status() {
